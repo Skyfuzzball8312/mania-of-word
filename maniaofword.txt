@@ -1,0 +1,14 @@
+Code the game Mania of Word, With Procedure:
+Profile Loading / creating for record tracking
+Dictionary will be use (in dictionary folder) or Uploading dictionary.txt and distribution.csv (letter, weight, score)
+Mode Selection (modes folder)
+Gamemode setting (setting.js on a mode)
+
+For the example, Anagram attack
+Timer: 60/180/360/600
+x2/x3 for Words / Letters?
+Tray (5/7/9)
+Allowance Bingo/All tile used (+50 Points)?
+Allowance of Length Bonus? (4 letters: 1 Point, 5 Letters: 2 points, 6 Letters: 3 Points, 7 Letters: 5 Points, 8 Letters or more: 10 Points)
+Rules (behaviour.js)
+Draw max tray allowed in game settings, and when a valid letters is formed by typing within the tray shown, dragging, clicking, it will replace with a new letter tiles, if possible word former within the tray is 0, reshuffle until there are at least 1 valid word form using the letter of the tray

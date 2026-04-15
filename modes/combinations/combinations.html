@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combinations — Mania of Word</title>
+    <meta name="description" content="Combinations – a Scrabble-like word puzzle game. Form words on the board to score points!">
+
+    <!-- Fonts -->
+    <style>
+        @font-face {
+            font-family: 'NewRodin';
+            src: url('../../Newrodin/Fonts/FOT-NewRodin Pro L.otf') format('opentype');
+            font-weight: 300;
+        }
+        @font-face {
+            font-family: 'NewRodin';
+            src: url('../../Newrodin/Fonts/FOT-NewRodin Pro M.otf') format('opentype');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'NewRodin';
+            src: url('../../Newrodin/Fonts/FOT-NewRodin Pro DB.otf') format('opentype');
+            font-weight: 600;
+        }
+        @font-face {
+            font-family: 'NewRodin';
+            src: url('../../Newrodin/Fonts/FOT-NewRodin Pro B.otf') format('opentype');
+            font-weight: 700;
+        }
+        @font-face {
+            font-family: 'NewRodin';
+            src: url('../../Newrodin/Fonts/FOT-NewRodin Pro EB.otf') format('opentype');
+            font-weight: 800;
+        }
+        @font-face {
+            font-family: 'NewRodin';
+            src: url('../../Newrodin/Fonts/FOT-NewRodin Pro UB.otf') format('opentype');
+            font-weight: 900;
+        }
+    </style>
+
+    <style>
+        /* ── Reset ─────────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'NewRodin', 'Segoe UI', sans-serif;
+            background: #0a0a1a;
+            color: #e8e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ── Animated background ──────────────────────────────────────── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(120, 80, 255, .12) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 200, 255, .08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 90%, rgba(255, 80, 160, .06) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── Screen containers ────────────────────────────────────────── */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+            padding: 1.5rem 1rem;
+        }
+        .screen.active { display: flex; }
+
+        /* ── Glass card ───────────────────────────────────────────────── */
+        .glass-card {
+            background: rgba(255,255,255,.04);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 560px;
+            width: 100%;
+        }
+
+        /* ── Headings ─────────────────────────────────────────────────── */
+        h1 {
+            font-weight: 900;
+            font-size: 2.4rem;
+            text-align: center;
+            background: linear-gradient(135deg, #fbbf24, #f97316, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: .5rem;
+            letter-spacing: -0.02em;
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,.45);
+            font-size: .9rem;
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        /* ── Settings screen ──────────────────────────────────────────── */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .85rem 0;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+        }
+        .setting-row:last-of-type { border-bottom: none; }
+        .setting-row label:first-child {
+            font-weight: 600;
+            font-size: .95rem;
+            color: rgba(255,255,255,.75);
+        }
+        .setting-row select, .setting-row input[type="date"] {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
+            color: #e8e8f0;
+            padding: .45rem .8rem;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: .9rem;
+            cursor: pointer;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .setting-row select:focus, .setting-row input[type="date"]:focus {
+            border-color: #fbbf24;
+        }
+        .setting-row select option {
+            background: #1a1a2e;
+            color: #e8e8f0;
+        }
+
+        /* ── Primary button ───────────────────────────────────────────── */
+        .btn-primary {
+            display: block;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: none;
+            border-radius: 14px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+            background: linear-gradient(135deg, #f97316, #ef4444);
+            cursor: pointer;
+            transition: transform .15s, box-shadow .2s;
+            box-shadow: 0 4px 24px rgba(249, 115, 22, .3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(249, 115, 22, .45);
+        }
+        .btn-primary:active { transform: scale(.97); }
+
+        /* Small button variant */
+        .btn-sm {
+            padding: .55rem 1.1rem;
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: .85rem;
+            color: #fff;
+            cursor: pointer;
+            transition: transform .12s, background .2s;
+        }
+        .btn-sm:hover { transform: translateY(-1px); }
+        .btn-sm:active { transform: scale(.96); }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 2px 12px rgba(16, 185, 129, .3);
+        }
+        .btn-shuffle {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 2px 12px rgba(245, 158, 11, .3);
+        }
+        .btn-clear {
+            background: rgba(255,255,255,.1);
+            box-shadow: none;
+        }
+        .btn-back {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            box-shadow: 0 2px 12px rgba(99, 102, 241, .3);
+        }
+
+        /* ── Game HUD ─────────────────────────────────────────────────── */
+        #game-screen { padding-top: 1rem; }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 1rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .hud-item { text-align: center; }
+        .hud-label {
+            font-size: .65rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: rgba(255,255,255,.4);
+            font-weight: 600;
+        }
+        .hud-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #fff;
+        }
+        .hud-value.score-val {
+            background: linear-gradient(135deg, #fbbf24, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Progress bar (puzzle completion) ─────────────────────────── */
+        .progress-container {
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 1rem;
+        }
+        .progress-label {
+            font-size: .7rem;
+            color: rgba(255,255,255,.4);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: .3rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-bar-bg {
+            height: 8px;
+            background: rgba(255,255,255,.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #fbbf24, #f97316);
+            transition: width .4s ease;
+        }
+        .progress-bar.complete {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        /* ── Game board ──────────────────────────────────────────────── */
+        .board-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .board-container {
+            display: inline-block;
+            background: rgba(255,255,255,.02);
+            border: 2px solid rgba(255,255,255,.08);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 1rem;
+            overflow: auto;
+            max-width: 100%;
+            max-height: 60vh;
+        }
+
+        .board-grid {
+            display: grid;
+            gap: 2px;
+        }
+
+        .board-cell {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: background .15s, border-color .15s, transform .1s;
+            font-size: clamp(0.55rem, 1.5vw, 0.9rem);
+            border: 1.5px solid transparent;
+            min-width: 0;
+            min-height: 0;
+        }
+
+        /* Empty cell */
+        .board-cell.empty {
+            background: rgba(255,255,255,.03);
+            border-color: rgba(255,255,255,.06);
+        }
+        .board-cell.empty:hover {
+            background: rgba(255,255,255,.08);
+            border-color: rgba(255,255,255,.15);
+        }
+        .board-cell.empty.drag-over {
+            background: rgba(251, 191, 36, .15);
+            border-color: #fbbf24;
+        }
+
+        /* Bonus cells */
+        .board-cell.bonus-dl {
+            background: rgba(56, 189, 248, .08);
+            border-color: rgba(56, 189, 248, .2);
+        }
+        .board-cell.bonus-tl {
+            background: rgba(96, 165, 250, .1);
+            border-color: rgba(96, 165, 250, .25);
+        }
+        .board-cell.bonus-ql {
+            background: rgba(129, 140, 248, .1);
+            border-color: rgba(129, 140, 248, .25);
+        }
+        .board-cell.bonus-dw {
+            background: rgba(251, 146, 60, .1);
+            border-color: rgba(251, 146, 60, .25);
+        }
+        .board-cell.bonus-tw {
+            background: rgba(239, 68, 68, .1);
+            border-color: rgba(239, 68, 68, .25);
+        }
+        .board-cell.bonus-qw {
+            background: rgba(236, 72, 153, .12);
+            border-color: rgba(236, 72, 153, .3);
+        }
+        .board-cell.bonus-star {
+            background: rgba(251, 191, 36, .1);
+            border-color: rgba(251, 191, 36, .3);
+        }
+
+        .board-cell .bonus-label {
+            font-size: clamp(0.4rem, 0.9vw, 0.6rem);
+            font-weight: 800;
+            color: rgba(255,255,255,.35);
+            line-height: 1;
+            pointer-events: none;
+        }
+        .board-cell.bonus-dl .bonus-label { color: rgba(56, 189, 248, .7); }
+        .board-cell.bonus-tl .bonus-label { color: rgba(96, 165, 250, .7); }
+        .board-cell.bonus-ql .bonus-label { color: rgba(129, 140, 248, .8); }
+        .board-cell.bonus-dw .bonus-label { color: rgba(251, 146, 60, .7); }
+        .board-cell.bonus-tw .bonus-label { color: rgba(239, 68, 68, .7); }
+        .board-cell.bonus-qw .bonus-label { color: rgba(236, 72, 153, .8); }
+        .board-cell.bonus-star .bonus-label { color: rgba(251, 191, 36, .8); font-size: clamp(0.7rem, 1.6vw, 1.1rem); }
+
+        /* Fixed tile (already placed word) */
+        .board-cell.fixed-tile {
+            background: linear-gradient(145deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+            border-color: rgba(255,255,255,.15);
+            cursor: default;
+        }
+
+        /* Placed tile (not yet submitted) */
+        .board-cell.placed-tile {
+            background: linear-gradient(145deg, rgba(251, 191, 36, .2), rgba(249, 115, 22, .15));
+            border-color: rgba(251, 191, 36, .5);
+            cursor: pointer;
+            animation: placed-glow .8s ease-in-out infinite alternate;
+        }
+        @keyframes placed-glow {
+            from { box-shadow: 0 0 4px rgba(251, 191, 36, .2); }
+            to { box-shadow: 0 0 12px rgba(251, 191, 36, .4); }
+        }
+        .board-cell.placed-tile:hover {
+            transform: scale(1.05);
+        }
+
+        .board-cell .cell-letter {
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+        }
+        .board-cell .cell-score {
+            font-size: clamp(0.35rem, 0.7vw, 0.5rem);
+            font-weight: 600;
+            color: rgba(255,255,255,.4);
+            position: absolute;
+            bottom: 1px;
+            right: 3px;
+        }
+
+        /* ── Rack ────────────────────────────────────────────────────── */
+        .rack-section {
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: .8rem;
+        }
+        .rack-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: rgba(255,255,255,.35);
+            font-weight: 600;
+            margin-bottom: .5rem;
+        }
+        .rack {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 56px;
+        }
+
+        .rack-tile {
+            width: 50px; height: 56px;
+            background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.04));
+            border: 1.5px solid rgba(255,255,255,.15);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: transform .15s, box-shadow .15s, border-color .15s;
+            position: relative;
+        }
+        .rack-tile:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, .25);
+            border-color: rgba(251, 191, 36, .4);
+        }
+        .rack-tile:active { cursor: grabbing; transform: scale(.95); }
+        .rack-tile.placed {
+            opacity: 0.25;
+            pointer-events: none;
+            filter: grayscale(1);
+        }
+        .rack-tile.selected {
+            border-color: #fbbf24;
+            background: linear-gradient(160deg, rgba(251, 191, 36, .2), rgba(249, 115, 22, .1));
+            box-shadow: 0 0 16px rgba(251, 191, 36, .3);
+            transform: translateY(-4px);
+        }
+        .rack-tile .letter {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+        }
+        .rack-tile .tile-score {
+            font-size: .55rem;
+            font-weight: 600;
+            color: rgba(255,255,255,.45);
+            position: absolute;
+            bottom: 4px; right: 6px;
+        }
+
+        /* ── Action row ──────────────────────────────────────────────── */
+        .action-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: .3rem;
+            margin-bottom: .8rem;
+            width: 100%;
+            max-width: 900px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Move log ────────────────────────────────────────────────── */
+        .move-log-container {
+            width: 100%;
+            max-width: 900px;
+            margin-top: .5rem;
+        }
+        .move-log {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 80px;
+            overflow-y: auto;
+            padding: .4rem 0;
+        }
+        .move-log::-webkit-scrollbar { width: 4px; }
+        .move-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+
+        .move-entry {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: .25rem .6rem;
+            background: rgba(255,255,255,.06);
+            border-radius: 8px;
+            font-size: .75rem;
+            font-weight: 600;
+            color: rgba(255,255,255,.6);
+        }
+        .move-entry .pts {
+            color: #fbbf24;
+            font-weight: 700;
+        }
+        .move-entry .type-badge {
+            font-size: .55rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: #fff;
+        }
+        .type-badge.linear {
+            background: rgba(56, 189, 248, .3);
+        }
+        .type-badge.junction {
+            background: rgba(236, 72, 153, .3);
+        }
+
+        /* ── Floating score popup ─────────────────────────────────────── */
+        .score-popup {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: 900;
+            color: #10b981;
+            pointer-events: none;
+            z-index: 200;
+            animation: score-fly 1.2s ease-out forwards;
+        }
+        .score-popup.reject {
+            color: #f87171;
+            font-size: 1.2rem;
+        }
+        .score-popup.allused {
+            color: #fbbf24;
+            font-size: 2.4rem;
+        }
+        .score-popup.complete {
+            color: #10b981;
+            font-size: 2.6rem;
+        }
+        @keyframes score-fly {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            70% { opacity: .8; transform: translate(-50%, -120%) scale(1.15); }
+            100% { opacity: 0; transform: translate(-50%, -180%) scale(.8); }
+        }
+
+        /* ── Puzzle complete overlay ──────────────────────────────────── */
+        .completion-overlay {
+            position: fixed; inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10,10,26,.85);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .4s;
+        }
+        .completion-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .completion-card {
+            text-align: center;
+            max-width: 440px;
+            width: 90%;
+        }
+        .completion-card .comp-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: .8rem;
+        }
+        .completion-card .comp-points {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: .5rem 0;
+        }
+        .completion-card .comp-sub {
+            font-size: .85rem;
+            color: rgba(255,255,255,.5);
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Game over card ───────────────────────────────────────────── */
+        .gameover-card {
+            text-align: center;
+        }
+        .gameover-card .final-score {
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 1rem 0 .3rem;
+        }
+        .gameover-card .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .8rem;
+            margin: 1.5rem 0;
+        }
+        .gameover-card .stat-box {
+            background: rgba(255,255,255,.05);
+            border-radius: 12px;
+            padding: .8rem;
+        }
+        .gameover-card .stat-box .stat-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fbbf24;
+        }
+        .gameover-card .stat-box .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: rgba(255,255,255,.4);
+            margin-top: .2rem;
+        }
+
+        /* ── Invalid shake ────────────────────────────────────────────── */
+        .shake {
+            animation: shake-x .35s ease-in-out;
+        }
+        @keyframes shake-x {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        /* ── Top 5 target list ───────────────────────────────────────── */
+        .target-list {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: .3rem;
+        }
+        .target-item {
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 8px;
+            padding: .25rem .5rem;
+            font-size: .7rem;
+            font-weight: 700;
+            color: rgba(255,255,255,.35);
+        }
+        .target-item.reached {
+            border-color: rgba(16, 185, 129, .4);
+            color: #10b981;
+            background: rgba(16, 185, 129, .08);
+        }
+
+        /* ── Responsive ───────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.7rem; }
+            .glass-card { padding: 1.5rem; }
+            .hud-value { font-size: 1.1rem; }
+            .rack-tile { width: 42px; height: 48px; }
+            .rack-tile .letter { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCREEN 1 – SETTINGS
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="settings-screen" class="screen active">
+    <div class="glass-card">
+        <h1>Combinations</h1>
+        <p class="subtitle">Mania of Word</p>
+        <div id="settings-container"></div>
+        <div id="load-status" style="
+            margin-top: 1rem;
+            padding: .65rem 1rem;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        "></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SCREEN 2 – GAME
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="game-screen" class="screen">
+
+    <!-- HUD -->
+    <div class="hud">
+        <div class="hud-item">
+            <div class="hud-label">Score</div>
+            <div class="hud-value score-val" id="hud-score">0</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Combos</div>
+            <div class="hud-value" id="hud-combos">0</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Board</div>
+            <div class="hud-value" id="hud-board-size">11×11</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Mode</div>
+            <div class="hud-value" id="hud-mode" style="font-size:.9rem">Quick</div>
+        </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="progress-container">
+        <div class="progress-label">
+            <span>Puzzle Progress</span>
+            <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+        </div>
+        <div class="target-list" id="target-list"></div>
+    </div>
+
+    <!-- Board -->
+    <div class="board-area">
+        <div class="board-container" id="board-container">
+            <div class="board-grid" id="board-grid"></div>
+        </div>
+    </div>
+
+    <!-- Rack -->
+    <div class="rack-section">
+        <div class="rack-label">Your Tiles (<span id="rack-count">0</span>)</div>
+        <div class="rack" id="rack"></div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-row">
+        <button class="btn-sm btn-clear" id="btn-recall" title="Recall tiles (Escape)">✕ Recall</button>
+        <button class="btn-sm btn-shuffle" id="btn-shuffle" title="Shuffle rack (Tab)">⟳ Shuffle</button>
+        <button class="btn-sm btn-back" id="btn-menu" title="Back to menu">☰ Menu</button>
+    </div>
+
+    <!-- Move log -->
+    <div class="move-log-container">
+        <div class="rack-label">Move History</div>
+        <div class="move-log" id="move-log"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     PUZZLE COMPLETION OVERLAY
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="completion-overlay" class="completion-overlay">
+    <div class="glass-card completion-card">
+        <div class="comp-title">🎉 Puzzle Complete!</div>
+        <div class="comp-points" id="comp-points">0</div>
+        <div class="comp-sub">Points earned</div>
+        <button class="btn-primary" id="btn-continue" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 24px rgba(16, 185, 129, .3);">Continue Playing</button>
+        <button class="btn-primary" id="btn-finish" style="margin-top: .6rem; background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 24px rgba(99, 102, 241, .3);">Finish</button>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="setting.js"></script>
+<script src="behaviour.js"></script>
+
+<script>
+(function () {
+    // ── DOM refs ──────────────────────────────────────────────────────
+    const settingsScreen   = document.getElementById('settings-screen');
+    const gameScreen       = document.getElementById('game-screen');
+    const settingsContainer = document.getElementById('settings-container');
+    const loadStatusEl     = document.getElementById('load-status');
+
+    const hudScore    = document.getElementById('hud-score');
+    const hudCombos   = document.getElementById('hud-combos');
+    const hudBoardSize = document.getElementById('hud-board-size');
+    const hudMode     = document.getElementById('hud-mode');
+
+    const progressBar  = document.getElementById('progress-bar');
+    const progressPct  = document.getElementById('progress-pct');
+    const targetListEl = document.getElementById('target-list');
+
+    const boardGridEl  = document.getElementById('board-grid');
+    const boardContainerEl = document.getElementById('board-container');
+    const rackEl       = document.getElementById('rack');
+    const rackCountEl  = document.getElementById('rack-count');
+    const moveLogEl    = document.getElementById('move-log');
+
+    const btnShuffle  = document.getElementById('btn-shuffle');
+    const btnRecall   = document.getElementById('btn-recall');
+    const btnMenu     = document.getElementById('btn-menu');
+    const btnContinue = document.getElementById('btn-continue');
+    const btnFinish   = document.getElementById('btn-finish');
+
+    const completionOverlay = document.getElementById('completion-overlay');
+
+    let selectedRackIndex = -1; // Index of selected rack tile
+
+    // ── Screen switching ─────────────────────────────────────────────
+    function showScreen(id) {
+        [settingsScreen, gameScreen].forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // ── Settings ─────────────────────────────────────────────────────
+    function showLoadStatus(msg, isError) {
+        loadStatusEl.style.display = 'block';
+        loadStatusEl.textContent = msg;
+        loadStatusEl.style.background = isError
+            ? 'rgba(248, 113, 113, .15)'
+            : 'rgba(251, 191, 36, .12)';
+        loadStatusEl.style.color = isError ? '#f87171' : 'rgba(255,255,255,.65)';
+        loadStatusEl.style.border = isError
+            ? '1px solid rgba(248,113,113,.3)'
+            : '1px solid rgba(251,191,36,.2)';
+    }
+
+    CombinationsSettings.buildSettingsPanel(settingsContainer, async (s) => {
+        showLoadStatus('⏳ Loading dictionary…', false);
+        await CombinationsGame.init(s, {
+            onUpdate: renderGame,
+            onAutoScore: handleMoveAccepted,
+            onMoveRejected: handleMoveRejected,
+            onPuzzleComplete: handlePuzzleComplete,
+            onLoadStatus: (msg, isError) => {
+                showLoadStatus(msg, isError);
+                if (isError) return;
+                if (msg.startsWith('Dictionary ready')) {
+                    setTimeout(() => {
+                        loadStatusEl.style.display = 'none';
+                        showScreen('game-screen');
+                    }, 600);
+                }
+            },
+        });
+    });
+
+    // ── Rendering ────────────────────────────────────────────────────
+    function renderGame(state) {
+        // HUD
+        hudScore.textContent = state.score.toLocaleString();
+        hudCombos.textContent = state.combinationsFound;
+        hudBoardSize.textContent = `${state.boardSize}×${state.boardSize}`;
+        hudMode.textContent = state.mode === 'daily' ? `Daily ${state.dailyDate || ''}` : 'Quick';
+
+        // Progress
+        renderProgress(state);
+
+        // Board
+        renderBoard(state);
+
+        // Rack
+        renderRack(state);
+    }
+
+    function renderProgress(state) {
+        const targetSum = state.topFiveTarget.reduce((a, b) => a + b, 0);
+        const playerTop5 = state.movesHistory
+            .map(m => m.totalScore)
+            .sort((a, b) => b - a)
+            .slice(0, 5);
+
+        // Progress is based on Total Score vs Target Sum
+        const pct = targetSum > 0 ? Math.min(100, Math.round((state.score / targetSum) * 100)) : 0;
+        progressPct.textContent = `${pct}%`;
+        progressBar.style.width = `${pct}%`;
+        
+        if (state.puzzleCompleted) {
+            progressBar.classList.add('complete');
+        } else {
+            progressBar.classList.remove('complete');
+        }
+
+        // Target items (Best 5 Move indicators)
+        targetListEl.innerHTML = '';
+        state.topFiveTarget.forEach((t, i) => {
+            const el = document.createElement('span');
+            el.className = 'target-item';
+            if (playerTop5[i] && playerTop5[i] >= t) {
+                el.classList.add('reached');
+                el.textContent = `#${i + 1}: ${playerTop5[i]} ✓`;
+            } else {
+                el.textContent = `#${i + 1}: ${t}`;
+            }
+            targetListEl.appendChild(el);
+        });
+    }
+
+    function renderBoard(state) {
+        const size = state.boardSize;
+        // Calculate cell size
+        const containerWidth = boardContainerEl.clientWidth - 8; // minus padding
+        const maxCellSize = Math.min(42, Math.floor(containerWidth / size) - 2);
+        const cellSize = Math.max(22, maxCellSize);
+
+        boardGridEl.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+        boardGridEl.style.gridTemplateRows = `repeat(${size}, ${cellSize}px)`;
+
+        boardGridEl.innerHTML = '';
+
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'board-cell';
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+
+                const boardCell = state.board[r][c];
+                const bonus = state.bonusBoard[r][c];
+
+                if (boardCell) {
+                    // Has a tile
+                    if (boardCell.fixed) {
+                        cell.classList.add('fixed-tile');
+                    } else {
+                        cell.classList.add('placed-tile');
+                        // Click to remove placed tile
+                        cell.addEventListener('click', () => {
+                            CombinationsGame.removeTileFromBoard(r, c);
+                            selectedRackIndex = -1;
+                        });
+                    }
+                    cell.innerHTML = `
+                        <span class="cell-letter">${boardCell.letter}</span>
+                        <span class="cell-score">${boardCell.score}</span>
+                    `;
+                } else {
+                    // Empty cell
+                    cell.classList.add('empty');
+
+                    if (bonus) {
+                        const typeClass = {
+                            'DL': 'bonus-dl', 'TL': 'bonus-tl', 'QL': 'bonus-ql',
+                            'DW': 'bonus-dw', 'TW': 'bonus-tw', 'QW': 'bonus-qw',
+                            'STAR': 'bonus-star',
+                        }[bonus.type] || '';
+                        cell.classList.add(typeClass);
+                        cell.innerHTML = `<span class="bonus-label">${bonus.label}</span>`;
+                    }
+
+                    // Click to place selected rack tile
+                    cell.addEventListener('click', () => {
+                        if (selectedRackIndex >= 0) {
+                            CombinationsGame.placeTileOnBoard(selectedRackIndex, r, c);
+                            selectedRackIndex = -1;
+                        }
+                    });
+
+                    // Drop target
+                    cell.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        cell.classList.add('drag-over');
+                    });
+                    cell.addEventListener('dragleave', () => {
+                        cell.classList.remove('drag-over');
+                    });
+                    cell.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        cell.classList.remove('drag-over');
+                        const tileIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                        if (!isNaN(tileIdx)) {
+                            CombinationsGame.placeTileOnBoard(tileIdx, r, c);
+                            selectedRackIndex = -1;
+                        }
+                    });
+                }
+
+                boardGridEl.appendChild(cell);
+            }
+        }
+    }
+
+    function renderRack(state) {
+        rackEl.innerHTML = '';
+        rackCountEl.textContent = state.rack.length;
+
+        state.rack.forEach((tile, idx) => {
+            const el = document.createElement('div');
+            el.className = 'rack-tile';
+            if (tile.placedOnBoard) {
+                el.classList.add('placed');
+            }
+            if (idx === selectedRackIndex) {
+                el.classList.add('selected');
+            }
+            el.innerHTML = `<span class="letter">${tile.letter}</span><span class="tile-score">${tile.score}</span>`;
+            el.setAttribute('draggable', tile.placedOnBoard ? 'false' : 'true');
+
+            // Click to select
+            el.addEventListener('click', () => {
+                if (selectedRackIndex === idx) {
+                    selectedRackIndex = -1;
+                } else {
+                    selectedRackIndex = idx;
+                }
+                renderRack(state);
+            });
+
+            // Drag
+            el.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', String(idx));
+                e.dataTransfer.effectAllowed = 'move';
+                el.style.opacity = '.4';
+            });
+            el.addEventListener('dragend', () => {
+                el.style.opacity = '1';
+            });
+
+            rackEl.appendChild(el);
+        });
+    }
+
+    // ── Score popup ──────────────────────────────────────────────────
+    function showPopup(text, cls) {
+        const el = document.createElement('div');
+        el.className = 'score-popup ' + (cls || '');
+        el.textContent = text;
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove());
+    }
+
+    // ── Move handling ───────────────────────────────────────────────
+    function handleMoveAccepted(move) {
+        const wordsStr = move.words.join(', ');
+        showPopup(`+${move.totalScore}`, '');
+
+        if (move.allUsed) {
+            setTimeout(() => showPopup('ALL USED!', 'allused'), 300);
+        }
+
+        // Add to log
+        const entry = document.createElement('span');
+        entry.className = 'move-entry';
+        const typeBadge = `<span class="type-badge ${move.type.toLowerCase()}">${move.type}</span>`;
+        entry.innerHTML = `${typeBadge} ${wordsStr} <span class="pts">+${move.totalScore}</span>`;
+        moveLogEl.prepend(entry);
+
+        selectedRackIndex = -1;
+    }
+
+    function handleMoveRejected(reason) {
+        showPopup(reason, 'reject');
+        boardGridEl.classList.add('shake');
+        setTimeout(() => boardGridEl.classList.remove('shake'), 400);
+    }
+
+    function handlePuzzleComplete(data) {
+        showPopup('PUZZLE COMPLETE!', 'complete');
+        document.getElementById('comp-points').textContent = data.points;
+        setTimeout(() => {
+            completionOverlay.classList.add('active');
+        }, 800);
+    }
+
+    // ── Completion overlay buttons ──────────────────────────────────
+    btnContinue.addEventListener('click', () => {
+        completionOverlay.classList.remove('active');
+    });
+
+    btnFinish.addEventListener('click', () => {
+        completionOverlay.classList.remove('active');
+        moveLogEl.innerHTML = '';
+        showScreen('settings-screen');
+    });
+
+    // ── Action buttons ──────────────────────────────────────────────
+    btnShuffle.addEventListener('click', () => CombinationsGame.shuffleRack());
+    btnRecall.addEventListener('click', () => {
+        CombinationsGame.clearPlacedTiles();
+        selectedRackIndex = -1;
+    });
+    btnMenu.addEventListener('click', () => {
+        if (confirm('Return to menu? Current progress will be lost.')) {
+            moveLogEl.innerHTML = '';
+            showScreen('settings-screen');
+        }
+    });
+
+    // ── Keyboard input ──────────────────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+        if (!CombinationsGame.isGameActive()) return;
+
+        const key = e.key;
+
+        if (key === 'Escape') {
+            e.preventDefault();
+            CombinationsGame.clearPlacedTiles();
+            selectedRackIndex = -1;
+        } else if (key === 'Tab') {
+            e.preventDefault();
+            CombinationsGame.shuffleRack();
+        }
+    });
+
+})();
+</script>
+
+</body>
+</html>

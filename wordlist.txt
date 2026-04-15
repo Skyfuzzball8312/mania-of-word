@@ -1,0 +1,27 @@
+make contribution to sth
+with a view to + Ving
+in order to + V
+make up one's mind
+be on a course in sth
+strike up a friendship with sb
+suit/satisfy/cater for one's tastes
+have a tendency to do st
+suit/satisfy/cater for one's tastes = provide what someone likes
+
+Create a game named Anagram Attack
+- Settings (setting.js):
+Timer: 60/180/300/600
+Bonus Spaces in Answer Tray? (x2/x3 Word / Letter) True/False
+Max Playing Tray: 5/7/9 Letters
+All Used (Bingo Bonus)(50/7*Max Tray (Rounded to nearest digit)): True/False
+Length Bonus (+1 for 4 letters, 2 for 5, 3 for 6, 5 for 7, 10 for 8 or more): True / False
+Dictionary (dictionary folder)
+- Gameplay (behaviour.js)
+- The game start after 3 seconds countdown
+Player use the keyboard to type the key (as long as the letter in the playing tray) to the answer tray, enter to submit, backspace to put back
+Player can tap / drag tiles to the answer tray / playing tray, clicking submit
+Player has a set of time limit (Timer)
+- If Valid Word, replace the used letter with a new letter and score points
+- If no possible word formed using the letter in the playing tray, replace them with the entire new set of letters until there are at least 1 possible word formed using the letter
+- Player can arranging / reshuffle the letter in the playing tray
+- Bonus space can appear in the answer tray
